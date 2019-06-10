@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.reportManager.mapper.StudentMapper">
+
+	<select id="getStudent" resultType="student">
+		SELECT s.studentId,s.studentNumber,s.name,s.sex,s.gradeId,s.createTime FROM student s WHERE s.studentNumber = #{userCode} AND s.password = #{password};
+	</select>
+	
+	<update id="updatePassword">
+		update student set password = #{password} where name = #{userCode}
+	</update>
+	
+	<insert id="updateAssignment">
+		INSERT INTO assignment_detail (assignmentDetailId,assignmentId,studentId,fileUrl,createTime) VALUES(#{assignmentDetailId},#{assignmentId},#{studentId},#{fileUrl},now())
+	</insert>
+	
+	<insert id="updateLabreport">
+		INSERT INTO labreport_detail (labreportDetailId,labreportId,studentId,fileUrl,createTime) VALUES(#{labreportDetailId},#{labreportId},#{studentId},#{fileUrl},now())
+	</insert>
+	
+	<select id="getAssignmentDetailByStudentIdAndAssignmentId" resultType="assignmentDetail">
+		SELECT assignmentDetailId FROM assignment_detail WHERE studentId = #{studentId} AND assignmentId = #{assignmentId}
+	</select>
+	
+	<select id="getLabreportDetailByStudentIdAndLabreportId" resultType="labreportDetail">
+		SELECT labreportDetailId FROM labreport_detail WHERE studentId = #{studentId} AND labreportId = #{labreportId}
+	</select>
+	
+	<select id="getAssignmentAveList" resultType="map" parameterType="com.reportManager.pojo.info.StudentInfo">
+		SELECT 
+			a.courseId,
+			AVG(ad.score) avgScore,
+			(SELECT courseName FROM course c WHERE c.courseId = a.courseId) courseName
+		FROM assignment a LEFT JOIN assignment_detail ad ON ad.assignmentId = a.assignmentId
+		WHERE ad.studentId = #{studentId}
+		GROUP BY a.courseId
+		limit #{page},#{limit}
+	</select>
+	
+	<select id="getAssignmentAveListCount" resultType="java.lang.Integer">
+		select count(0) from (
+			SELECT 
+				AVG(ad.score) avgScore,
+				(SELECT courseName FROM course c WHERE c.courseId = a.courseId) courseName
+			FROM assignment a LEFT JOIN assignment_detail ad ON ad.assignmentId = a.assignmentId
+			WHERE ad.studentId = #{studentId}
+			GROUP BY a.courseId
+		)total_count
+	</select>
+	
+	<select id="getLabreportAveList" resultType="map" parameterType="com.reportManager.pojo.info.StudentInfo">
+		SELECT 
+			l.courseId,
+			AVG(ld.score) avgScore,
+			(SELECT courseName FROM course c WHERE c.courseId = l.courseId) courseName
+		FROM labreport l LEFT JOIN labreport_detail ld ON ld.labreportId = l.labreportId
+		WHERE ld.studentId = #{studentId}
+		GROUP BY l.courseId
+		limit #{page},#{limit}
+	</select>
+	
+	<select id="getLabreportAveListCount" resultType="java.lang.Integer">
+		select count(0) from (
+			SELECT 
+				AVG(ld.score) avgScore,
+				(SELECT courseName FROM course c WHERE c.courseId = l.courseId) courseName
+			FROM labreport l LEFT JOIN labreport_detail ld ON ld.labreportId = l.labreportId
+			WHERE ld.studentId = #{studentId}
+			GROUP BY l.courseId
+		)total_count
+	</select>
+	
+	<select id="getScoreByStudentId" resultType="map" parameterType="com.reportManager.pojo.info.StudentInfo">
+		SELECT 
+			t.courseId,
+			(SELECT c.courseName FROM course c WHERE c.courseId = t.courseId) courseName,
+			(SELECT s.addScore FROM score s WHERE s.studentId = #{studentId} AND s.courseId = t.courseId) addScore,
+			(SELECT s.subScore FROM score s WHERE s.studentId = #{studentId} AND s.courseId = t.courseId) subScore
+		FROM teaching t
+		WHERE t.gradeId = (
+			SELECT s.gradeId
+			FROM student s
+			WHERE s.studentId = #{studentId}
+		)
+		LIMIT #{page},#{limit}
+	</select>
+	
+	<select id="getScoreByStudentIdCount" resultType="java.lang.Integer">
+		select count(0) from (
+			SELECT 
+			(SELECT c.courseName FROM course c WHERE c.courseId = t.courseId) courseName,
+			(SELECT s.addScore FROM score s WHERE s.studentId = #{studentId} AND s.courseId = t.courseId) addScore,
+			(SELECT s.subScore FROM score s WHERE s.studentId = #{studentId} AND s.courseId = t.courseId) subScore
+		FROM teaching t
+		WHERE t.gradeId = (
+			SELECT s.gradeId
+			FROM student s
+			WHERE s.studentId = #{studentId}
+		)
+		)total_count
+	</select>
+	
+	<select id="getGradeAllCourse" resultType="map" parameterType="com.reportManager.pojo.info.StudentInfo">
+		SELECT c.courseId,c.courseName,'0' allScore FROM course c WHERE c.courseId IN (SELECT t.courseId FROM teaching t WHERE t.gradeId = (SELECT s.gradeId FROM student s WHERE s.studentId = #{studentId}))
+	</select>
+
+</mapper>

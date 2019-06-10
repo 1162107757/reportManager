@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.reportManager.mapper.AdminMapper">
+
+	<select id="getAdmin" resultType="admin">
+		select a.userId,a.userCode from admin a where a.userCode = #{userCode} and a.password = #{password}
+	</select>
+	
+	<update id="updatePassword">
+		update admin set password = #{password} where userCode = #{userCode}
+	</update>
+	
+	<select id="getStudentList" resultType="map" parameterType="com.reportManager.pojo.info.StudentInfo">
+		SELECT 
+			s.studentId,
+			s.name,
+			s.studentNumber,
+			s.sex,
+			(SELECT g.gradeName FROM grade g WHERE s.gradeId = g.gradeId) gradeName,
+			s.createTime,
+			s.gradeId
+			<if test="gradeId != null and gradeId != ''">
+				,(SELECT addScore FROM `score` WHERE studentId = s.studentId AND courseId = #{courseId}) addScore
+				,(SELECT subScore FROM `score` WHERE studentId = s.studentId AND courseId = #{courseId}) subScore
+			</if> 
+		FROM
+			student s
+		WHERE s.name LIKE '%${searchContent}%'
+		<if test="gradeId != null and gradeId != ''">
+			AND s.gradeId = #{gradeId}
+		</if>
+		ORDER BY s.createTime DESC
+		LIMIT #{page},#{limit}
+	</select>
+	
+	<select id="getStudentByStudentNumber" resultType="student">
+		select s.* from student s where studentNumber = #{studentNumber}
+	</select>
+
+	<select id="getEmployeByWorkNumber" resultType="employe">
+		select e.* from employe e where workNumber = #{workNumber}
+	</select>
+	
+	<select id="getStudentListCount" resultType="java.lang.Integer" parameterType="com.reportManager.pojo.info.StudentInfo">
+		select count(0) from (
+			SELECT 
+				s.name,
+				s.sex,
+				(SELECT g.gradeName FROM grade g WHERE s.gradeId = g.gradeId) gradeName,
+				s.createTime 
+				<if test="gradeId != null and gradeId != ''">
+					,(SELECT addScore FROM `score` WHERE studentId = s.studentId AND courseId = #{courseId}) addScore
+					,(SELECT subScore FROM `score` WHERE studentId = s.studentId AND courseId = #{courseId}) subScore
+				</if> 
+			FROM
+				student s
+			WHERE s.name LIKE '%${searchContent}%'
+			<if test="gradeId != null and gradeId != ''">
+				AND s.gradeId = #{gradeId}
+			</if>
+		)total_count
+	</select>
+	
+	<update id="updateStudent">
+		update student set name = #{name},sex = #{sex},gradeId = #{gradeId},studentNumber = #{studentNumber} where studentId = #{studentId}
+	</update>
+	
+	<update id="updateEmploye">
+		update employe set employeName = #{employeName},workNumber = #{workNumber} where employeId = #{employeId}
+	</update>
+	
+	<update id="updateGrade">
+		update grade set gradeName = #{gradeName},attrYear = #{attrYear} where gradeId = #{gradeId}
+	</update>
+	
+	<update id="updateCourse">
+		update course set courseName = #{courseName} where courseId = #{courseId}
+	</update>
+	
+	<update id="updateTeaching">
+		UPDATE teaching SET employeId = #{employeId},gradeId = #{gradeId},courseId = #{courseId},classTime = #{classTime} WHERE teachingId = #{teachingId}
+	</update>
+	
+	<select id="getGradeList" resultType="map" parameterType="com.reportManager.pojo.info.GradeInfo">
+		SELECT 
+			g.gradeId,
+			g.attrYear,
+			g.gradeName,
+			g.createTime 
+		FROM 
+			grade g 
+		LIMIT #{page},#{limit}
+	</select>
+	<select id="getgGradeListCount" resultType="java.lang.Integer">
+		SELECT COUNT(0) FROM (
+			SELECT 
+				g.gradeId,
+				g.attrYear,
+				g.gradeName,
+				g.createTime 
+			FROM 
+				grade g 
+		) total_count
+	</select>
+	
+	<select id="getEmployeList" resultType="map" parameterType="com.reportManager.pojo.info.EmployeInfo">
+		SELECT 
+			e.employeId,
+			e.employeName,
+			e.workNumber,
+			e.createTime
+		FROM employe e 
+		LIMIT #{page},#{limit}
+	</select>
+	<select id="getEmployeListCount" resultType="java.lang.Integer">
+		SELECT COUNT(0) FROM (
+			SELECT 
+				e.employeId,
+				e.employeName,
+				e.workNumber,
+				e.createTime
+			FROM employe e 
+		) total_count
+	</select>
+	
+	<select id="getCourseList" resultType="map" parameterType="com.reportManager.pojo.info.CourseInfo">
+		SELECT 
+			c.courseId,
+			c.courseName,
+			c.createTime
+		FROM 
+			course c
+		LIMIT #{page},#{limit}
+	</select>
+	
+	<select id="getCourseListCount" resultType="java.lang.Integer">
+		SELECT COUNT(0) FROM (
+			SELECT 
+				c.courseId,
+				c.courseName,
+				c.createTime
+			FROM 
+				course c
+		) total_count
+	</select>
+	<select id="getTeachingList" resultType="map" parameterType="com.reportManager.pojo.info.TeachingInfo">
+		SELECT 
+			t.teachingId,
+			(SELECT e.employeName FROM employe e WHERE e.employeId = t.employeId) employeName,
+			(SELECT g.gradeName FROM grade g WHERE g.gradeId = t.gradeId) gradeName,
+			(SELECT c.courseName FROM course c WHERE c.courseId = t.courseId) courseName,
+			t.classTime,
+			t.credits,
+			t.createTime
+		FROM teaching t
+		<where>
+			<if test="employe != null">
+				and t.employeId = #{employe.employeId}
+			</if>
+		</where>
+		LIMIT #{page},#{limit}
+	</select>
+	
+	<select id="getTeachingListCount" resultType="java.lang.Integer">
+		SELECT COUNT(0) FROM (
+			SELECT 
+				t.teachingId,
+				(SELECT e.employeName FROM employe e WHERE e.employeId = t.employeId) employeName,
+				(SELECT g.gradeName FROM grade g WHERE g.gradeId = t.gradeId) gradeName,
+				(SELECT c.courseName FROM course c WHERE c.courseId = t.courseId) courseName,
+				t.classTime,
+				t.credits,
+				t.createTime
+			FROM teaching t
+			<where>
+				<if test="employe != null">
+					and t.employeId = #{employe.employeId}
+				</if>
+			</where>
+		) total_count
+	</select>
+	
+	<insert id="addCourse">
+		INSERT INTO `course`(courseId,courseName,createTime) VALUES(#{courseId},#{courseName},now())
+	</insert>
+	
+	<insert id="addEmploye">
+		INSERT INTO `employe`(employeId,employeName,workNumber,`password`,createTime) VALUES(#{employeId},#{employeName},#{workNumber},'e10adc3949ba59abbe56e057f20f883e',now())
+	</insert>
+	
+	<insert id="addStudent">
+		INSERT INTO `student`(studentId,`name`,sex,gradeId,`password`,createTime,studentNumber) VALUES(#{studentId},#{name},#{sex},#{gradeId},'e10adc3949ba59abbe56e057f20f883e',now(),#{studentNumber})
+	</insert>
+	
+	<insert id="addGrade">
+		INSERT INTO `grade`(gradeId,attrYear,gradeName,createTime) VALUES(#{gradeId},#{attrYear},#{gradeName},now())
+	</insert>
+	
+	<insert id="addTeaching">
+		INSERT INTO teaching(teachingId,employeId,gradeId,courseId,classTime,createTime) VALUES(#{teachingId},#{employeId},#{gradeId},#{courseId},#{classTime},now())
+	</insert>
+	
+	<select id="getTeachingByCourseNameAndGradeName" parameterType="teaching" resultType="teaching">
+		SELECT teachingId FROM `teaching` WHERE gradeId = #{gradeId} and courseId = #{courseId} and employeId = #{employeId}
+	</select>
+</mapper>

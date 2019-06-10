@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.reportManager.mapper.EmployeMapper">
+
+	<select id="getEmploye" resultType="employe">
+		select e.employeId,e.employeName,e.workNumber,e.createTime from employe e where e.workNumber = #{userCode} and e.password = #{password}
+	</select>
+	
+	<update id="updatePassword">
+		update employe set password = #{password} where workNumber = #{userCode}
+	</update>
+	
+	<select id="getAssignmentList" parameterType="com.reportManager.pojo.info.AssignmentInfo" resultType="map">
+		SELECT
+			a.assignmentId,
+			a.assignmentName,
+			a.fileUrl,
+			(SELECT c.courseName FROM course c WHERE c.courseId = a.courseId) courseName,
+			(SELECT g.gradeName FROM grade g WHERE g.gradeId = a.gradeId) gradeName,
+			a.courseId,
+			a.gradeId,
+			(SELECT ad.score FROM `assignment_detail` ad WHERE a.assignmentId = ad.assignmentId AND ad.studentId = #{studentId}) score,
+			createTime
+		FROM assignment a 
+		order by a.createTime desc
+		LIMIT #{page},#{limit}
+	</select>
+	
+	<select id="getAssignmentListCount" resultType="java.lang.Integer">
+		select count(0) from (
+			SELECT
+				a.assignmentId,
+				a.assignmentName,
+				a.fileUrl,
+				(SELECT c.courseName FROM course c WHERE c.courseId = a.courseId) courseName,
+				(SELECT g.gradeName FROM grade g WHERE g.gradeId = a.gradeId) gradeName,
+				(SELECT ad.score FROM `assignment_detail` ad WHERE a.assignmentId = ad.assignmentId AND ad.studentId = #{studentId}) score,
+				createTime
+			FROM assignment a 
+		)total_count
+	</select>
+	
+	<select id="getAssignmentDetailList" parameterType="com.reportManager.pojo.info.AssignmentDetailInfo" resultType="map">
+		SELECT 
+			ad.assignmentDetailId,
+			ad.assignmentId,
+			(SELECT assignmentName FROM assignment a WHERE a.assignmentId = ad.assignmentId) assignmentName,
+			ad.fileUrl,
+			ad.studentId,
+			ad.score,
+			(SELECT `name` FROM student s WHERE ad.studentId = s.studentId) `name`
+		FROM 
+			assignment_detail ad 
+		WHERE 
+			ad.assignmentId = #{assignmentId}
+		LIMIT #{page},#{limit}
+	</select>
+	
+	<select id="getAssignmentDetailListCount" resultType="java.lang.Integer">
+		select count(0) from (
+			SELECT 
+				ad.assignmentDetailId,
+				ad.assignmentId,
+				(SELECT assignmentName FROM assignment a WHERE a.assignmentId = ad.assignmentId) assignmentName,
+				ad.fileUrl,
+				ad.studentId,
+				ad.score,
+				(SELECT `name` FROM student s WHERE ad.studentId = s.studentId) `name`
+			FROM 
+				assignment_detail ad 
+			WHERE 
+				ad.assignmentId = #{assignmentId}
+		)total_count
+	</select>
+	
+	<select id="getLabreportList" parameterType="com.reportManager.pojo.info.LabreportInfo" resultType="map">
+		SELECT
+			l.labreportId,
+			l.labreportName,
+			l.fileUrl,
+			(SELECT c.courseName FROM course c WHERE c.courseId = l.courseId) courseName,
+			(SELECT g.gradeName FROM grade g WHERE g.gradeId = l.gradeId) gradeName,
+			l.courseId,
+			l.gradeId,
+			(SELECT ld.score FROM `labreport_detail` ld WHERE l.labreportId = ld.labreportId AND ld.studentId = #{studentId}) score,
+			l.createTime
+		FROM labreport l
+		ORDER BY l.createTime DESC
+		LIMIT #{page},#{limit}
+	</select>
+	
+	<select id="getLabreportListCount" resultType="java.lang.Integer">
+		select count(0) from (
+			SELECT
+				l.labreportId,
+				l.labreportName,
+				l.fileUrl,
+				(SELECT c.courseName FROM course c WHERE c.courseId = l.courseId) courseName,
+				(SELECT g.gradeName FROM grade g WHERE g.gradeId = l.gradeId) gradeName,
+				(SELECT ld.score FROM `labreport_detail` ld WHERE l.labreportId = ld.labreportId AND ld.studentId = #{studentId}) score,
+				l.createTime
+			FROM labreport l
+		)total_count
+	</select>
+	
+	<select id="getLabreportDetailList" parameterType="com.reportManager.pojo.info.LabreportDetailInfo" resultType="map">
+		SELECT 
+			ld.labreportDetailId,
+			ld.labreportId,
+			(SELECT l.labreportName FROM labreport l WHERE l.labreportId = ld.labreportId) labreportName,
+			ld.fileUrl,
+			ld.studentId,
+			ld.score,
+			(SELECT `name` FROM student s WHERE ld.studentId = s.studentId) `name`
+		FROM 
+			labreport_detail ld
+		WHERE 
+			ld.labreportId = #{labreportId}
+		LIMIT #{page},#{limit}
+	</select>
+	
+	<select id="getLabreportDetailListCount" resultType="java.lang.Integer">
+		select count(0) from (
+			SELECT 
+				ld.labreportDetailId,
+				ld.labreportId,
+				(SELECT l.labreportName FROM labreport l WHERE l.labreportId = ld.labreportId) labreportName,
+				ld.fileUrl,
+				ld.studentId,
+				ld.score,
+				(SELECT `name` FROM student s WHERE ld.studentId = s.studentId) `name`
+			FROM 
+				labreport_detail ld
+			WHERE 
+				ld.labreportId = #{labreportId}
+		)total_count
+	</select>
+	
+	<insert id="addAssignment">
+		INSERT INTO assignment(assignmentId,assignmentName,gradeId,fileUrl,courseId,createTime) VALUES(#{assignmentId},#{assignmentName},#{gradeId},#{fileUrl},#{courseId},now())
+	</insert>
+	
+	<update id="updateAssignment">
+		UPDATE `assignment` SET assignmentName = #{assignmentName},gradeId = #{gradeId},fileUrl = #{fileUrl},courseId = #{courseId} where assignmentId = #{assignmentId}
+	</update>
+	
+	<update id="updateScore">
+		UPDATE `assignment_detail` SET score = #{score} where assignmentDetailId = #{assignmentDetailId} and studentId = #{studentId}
+	</update>
+
+	<update id="updateLabreportScore">
+		UPDATE `labreport_detail` SET score = #{score} where labreportDetailId = #{labreportDetailId} and studentId = #{studentId}
+	</update>
+	
+	<insert id="addLabreport">
+		INSERT INTO labreport(labreportId,gradeId,labreportName,fileUrl,courseId,createTime) VALUES(#{labreportId},#{gradeId},#{labreportName},#{fileUrl},#{courseId},now())
+	</insert>
+	
+	<update id="updateLabreport">
+		UPDATE `labreport` SET labreportName = #{labreportName},gradeId = #{gradeId},fileUrl = #{fileUrl},courseId = #{courseId} where labreportId = #{labreportId}
+	</update>
+	
+	<select id="getEmployeGrade" resultType="map">
+		SELECT g.* FROM grade g WHERE g.gradeId IN(SELECT t.gradeId FROM `teaching` t WHERE t.employeId = #{employeId} GROUP BY t.gradeId)
+	</select>
+	
+	<select id="getEmployeCourse" resultType="map">
+		SELECT c.* FROM `course` c WHERE c.courseId IN(SELECT t.courseId FROM `teaching` t WHERE t.gradeId = #{gradeId} GROUP BY t.courseId)
+	</select>
+	
+	<select id="getScoreByStudentIdAndCourseId" resultType="score">
+		select s.* from score s where studentId = #{studentId} and courseId = #{courseId}
+	</select>
+	
+	<update id="updateScoreTwo">
+		UPDATE score SET studentId = #{studentId},addScore = #{addScore},subScore = #{subScore},courseId = #{courseId} WHERE scoreId = #{scoreId}
+	</update>
+	
+	<insert id="addScore">
+		INSERT INTO score(scoreId,studentId,addScore,subScore,courseId,createTime) VALUES(#{scoreId},#{studentId},#{addScore},#{subScore},#{courseId},now())
+	</insert>
+
+</mapper>
