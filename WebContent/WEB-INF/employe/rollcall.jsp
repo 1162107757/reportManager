@@ -31,6 +31,14 @@
 	<!-- ICONS -->
 	<link rel="apple-touch-icon" sizes="76x76" href="<%=basePath %>static/assets/img/apple-icon.png">
 	<link rel="icon" type="image/png" sizes="96x96" href="<%=basePath %>static/assets/img/favicon.png">
+	
+	<style type="text/css">
+		.layui-form-item .layui-input-inline {
+		    float: left;
+		    width: 100px;
+		    margin-right: 10px;
+		}
+	</style>
 </head>
 
 <body>
@@ -83,7 +91,7 @@
 								    <div class="layui-input-inline">
 								    	<button id="startRollcall" class="layui-btn"><i class="icons icon_revise"></i>随机点名</button>
 								    </div>
-								    <div class="layui-input-inline">
+								    <div class="layui-input-inline" style="width: 100px;">
 								    	<button id="submitRollcall" class="layui-btn"><i class="icons icon_revise"></i>标注为缺勤</button>
 								    </div>
 								</div>
